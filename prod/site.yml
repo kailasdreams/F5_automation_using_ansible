@@ -3,44 +3,43 @@
   hosts: all
   connection: local
   gather_facts: false
-
   collections:
     - f5networks.f5_modules
-
   vars:
     f5_provider:
       server: "{{ ansible_host }}"
       user: "{{ f5_username }}"
       password: "{{ f5_password }}"
       validate_certs: false
-
   tasks:
-
     - name: Show F5 connection information
       ansible.builtin.debug:
         msg:
           - "Inventory host: {{ inventory_hostname }}"
           - "F5 management IP: {{ ansible_host }}"
-
     - name: Create HTTPS health monitor
       f5networks.f5_modules.bigip_monitor_https:
         name: MON_APP01
         provider: "{{ f5_provider }}"
-        send: "GET /"
-        receive: "HTTP"
+        send: GET /
+        receive: HTTP
         interval: 5
         timeout: 16
         state: present
-
     - name: Create Client SSL profile
       f5networks.f5_modules.bigip_profile_client_ssl:
         name: CLIENTSSL_APP01
         cert_key_chain:
-          - cert: clientssl.crt
-            key: clientssl.key
+          - cert: default.crt
+            key: default.key
         provider: "{{ f5_provider }}"
         state: present
-
+    - name: Create Server SSL profile
+      f5networks.f5_modules.bigip_profile_server_ssl:
+        name: SERVERSSL_APP01
+        parent: serverssl
+        provider: "{{ f5_provider }}"
+        state: present
     - name: Create F5 pool
       f5networks.f5_modules.bigip_pool:
         name: POOL_APP01
@@ -49,34 +48,36 @@
           - MON_APP01
         provider: "{{ f5_provider }}"
         state: present
-
     - name: Add pool member 1
       f5networks.f5_modules.bigip_pool_member:
         pool: POOL_APP01
         name: APP01_MEMBER_1
         host: 10.10.10.11
-        port: 443
+        port: "443"
         provider: "{{ f5_provider }}"
         state: present
-
     - name: Add pool member 2
       f5networks.f5_modules.bigip_pool_member:
         pool: POOL_APP01
         name: APP01_MEMBER_2
         host: 10.10.10.12
-        port: 443
+        port: "443"
         provider: "{{ f5_provider }}"
         state: present
-
     - name: Create virtual server
       f5networks.f5_modules.bigip_virtual_server:
         name: VIP_APP01_HTTPS
         destination: 192.168.1.200
-        port: 443
+        port: "443"
         pool: POOL_APP01
         ip_protocol: tcp
+        snat: Automap
+        default_persistence_profile: /Common/cookie
         profiles:
           - http
           - CLIENTSSL_APP01
+          - SERVERSSL_APP01
+        irules: Insert_XFF
         provider: "{{ f5_provider }}"
         state: present
+
