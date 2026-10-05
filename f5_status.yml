@@ -1,0 +1,112 @@
+---
+- name: Fetch F5 BIG-IP Inventory Details
+  hosts: all
+  connection: local
+  gather_facts: no
+  
+  vars:
+    f5_provider:
+      server: "{{ ansible_host }}"
+      user: "{{ f5_username }}"
+      password: "{{ f5_password }}"
+      server_port: 443
+      validate_certs: false
+
+  tasks:
+    - name: Collect F5 virtual servers (VIP)
+      f5networks.f5_modules.bigip_device_info:
+        gather_subset:
+          - ltm-virtual
+        provider: "{{ f5_provider }}"
+      register: f5_vips
+
+    - name: Collect F5 pools
+      f5networks.f5_modules.bigip_device_info:
+        gather_subset:
+          - ltm-pool
+        provider: "{{ f5_provider }}"
+      register: f5_pools
+
+    - name: Display Virtual Servers (VIPs)
+      debug:
+        msg: |
+          ============================================
+          F5 DEVICE: {{ inventory_hostname }}
+          ============================================
+          
+          VIRTUAL SERVERS (VIPs):
+          {% for vip in f5_vips.ltm_virtuals %}
+          
+          Name: {{ vip.name }}
+          Destination IP: {{ vip.destination.split(':')[0] }}
+          Port: {{ vip.destination.split(':')[1] }}
+          State: {{ vip.state }}
+          Status: {{ vip.status }}
+          Pool: {{ vip.pool | default('None') }}
+          Profiles: {{ vip.profiles | join(', ') if vip.profiles else 'None' }}
+          
+          {% endfor %}
+
+    - name: Display Pools and Members
+      debug:
+        msg: |
+          ============================================
+          POOLS AND MEMBERS:
+          ============================================
+          {% for pool in f5_pools.ltm_pools %}
+          
+          Pool Name: {{ pool.name }}
+          State: {{ pool.state }}
+          Monitor: {{ pool.monitor | default('None') }}
+          Members:
+          {% if pool.members %}
+          {% for member in pool.members %}
+            - {{ member.name }} | State: {{ member.state }} | Status: {{ member.status }}
+          {% endfor %}
+          {% else %}
+            No members configured
+          {% endif %}
+          
+          {% endfor %}
+
+    - name: Create CSV report
+      copy:
+        content: |
+          F5_Device,VIP_Name,Destination_IP,Port,Pool_Name,Member_Name,Member_Status,Member_State
+          {% for vip in f5_vips.ltm_virtuals %}
+          {% if vip.pool %}
+          {% set pool_name = vip.pool %}
+          {% set pool_obj = f5_pools.ltm_pools | selectattr('name', 'match', pool_name) | first %}
+          {% if pool_obj and pool_obj.members %}
+          {% for member in pool_obj.members %}
+          {{ inventory_hostname }},{{ vip.name }},{{ vip.destination.split(':')[0] }},{{ vip.destination.split(':')[1] }},{{ pool_name }},{{ member.name }},{{ member.status }},{{ member.state }}
+          {% endfor %}
+          {% else %}
+          {{ inventory_hostname }},{{ vip.name }},{{ vip.destination.split(':')[0] }},{{ vip.destination.split(':')[1] }},{{ pool_name }},N/A,N/A,N/A
+          {% endif %}
+          {% else %}
+          {{ inventory_hostname }},{{ vip.name }},{{ vip.destination.split(':')[0] }},{{ vip.destination.split(':')[1] }},None,N/A,N/A,N/A
+          {% endif %}
+          {% endfor %}
+        dest: "/tmp/f5_inventory_{{ inventory_hostname }}_{{ ansible_date_time.iso8601_basic_short }}.csv"
+      delegate_to: localhost
+
+    - name: Save JSON inventory
+      copy:
+        content: |
+          {
+            "device": "{{ inventory_hostname }}",
+            "virtual_servers": {{ f5_vips.ltm_virtuals | to_nice_json }},
+            "pools": {{ f5_pools.ltm_pools | to_nice_json }}
+          }
+        dest: "/tmp/f5_inventory_{{ inventory_hostname }}.json"
+      delegate_to: localhost
+
+    - name: Display file locations
+      debug:
+        msg: |
+          ============================================
+          Reports Generated:
+          ============================================
+          CSV Report: /tmp/f5_inventory_{{ inventory_hostname }}_{{ ansible_date_time.iso8601_basic_short }}.csv
+          JSON Report: /tmp/f5_inventory_{{ inventory_hostname }}.json

@@ -3,33 +3,60 @@
   hosts: all
   connection: local
   gather_facts: false
+<<<<<<< HEAD
   collections:
     - f5networks.f5_modules
+=======
+
+  collections:
+    - f5networks.f5_modules
+
+>>>>>>> ff3166e (	new file:   Ansible_F5_Automation_Demo_Kailas_Pathade.docx)
   vars:
     f5_provider:
       server: "{{ ansible_host }}"
       user: "{{ f5_username }}"
       password: "{{ f5_password }}"
       validate_certs: false
+<<<<<<< HEAD
   tasks:
+=======
+
+  tasks:
+
+>>>>>>> ff3166e (	new file:   Ansible_F5_Automation_Demo_Kailas_Pathade.docx)
     - name: Show F5 connection information
       ansible.builtin.debug:
         msg:
           - "Inventory host: {{ inventory_hostname }}"
           - "F5 management IP: {{ ansible_host }}"
+<<<<<<< HEAD
+=======
+
+>>>>>>> ff3166e (	new file:   Ansible_F5_Automation_Demo_Kailas_Pathade.docx)
     - name: Create HTTPS health monitor
       f5networks.f5_modules.bigip_monitor_https:
         name: MON_APP01
         provider: "{{ f5_provider }}"
+<<<<<<< HEAD
         send: GET /
         receive: HTTP
         interval: 5
         timeout: 16
         state: present
+=======
+        send: "GET /"
+        receive: "HTTP"
+        interval: 5
+        timeout: 16
+        state: present
+
+>>>>>>> ff3166e (	new file:   Ansible_F5_Automation_Demo_Kailas_Pathade.docx)
     - name: Create Client SSL profile
       f5networks.f5_modules.bigip_profile_client_ssl:
         name: CLIENTSSL_APP01
         cert_key_chain:
+<<<<<<< HEAD
           - cert: default.crt
             key: default.key
         provider: "{{ f5_provider }}"
@@ -40,6 +67,13 @@
         parent: serverssl
         provider: "{{ f5_provider }}"
         state: present
+=======
+          - cert: clientssl.crt
+            key: clientssl.key
+        provider: "{{ f5_provider }}"
+        state: present
+
+>>>>>>> ff3166e (	new file:   Ansible_F5_Automation_Demo_Kailas_Pathade.docx)
     - name: Create F5 pool
       f5networks.f5_modules.bigip_pool:
         name: POOL_APP01
@@ -48,26 +82,45 @@
           - MON_APP01
         provider: "{{ f5_provider }}"
         state: present
+<<<<<<< HEAD
+=======
+
+>>>>>>> ff3166e (	new file:   Ansible_F5_Automation_Demo_Kailas_Pathade.docx)
     - name: Add pool member 1
       f5networks.f5_modules.bigip_pool_member:
         pool: POOL_APP01
         name: APP01_MEMBER_1
         host: 10.10.10.11
+<<<<<<< HEAD
         port: "443"
         provider: "{{ f5_provider }}"
         state: present
+=======
+        port: 443
+        provider: "{{ f5_provider }}"
+        state: present
+
+>>>>>>> ff3166e (	new file:   Ansible_F5_Automation_Demo_Kailas_Pathade.docx)
     - name: Add pool member 2
       f5networks.f5_modules.bigip_pool_member:
         pool: POOL_APP01
         name: APP01_MEMBER_2
         host: 10.10.10.12
+<<<<<<< HEAD
         port: "443"
         provider: "{{ f5_provider }}"
         state: present
+=======
+        port: 443
+        provider: "{{ f5_provider }}"
+        state: present
+
+>>>>>>> ff3166e (	new file:   Ansible_F5_Automation_Demo_Kailas_Pathade.docx)
     - name: Create virtual server
       f5networks.f5_modules.bigip_virtual_server:
         name: VIP_APP01_HTTPS
         destination: 192.168.1.200
+<<<<<<< HEAD
         port: "443"
         pool: POOL_APP01
         ip_protocol: tcp
@@ -81,3 +134,13 @@
         provider: "{{ f5_provider }}"
         state: present
 
+=======
+        port: 443
+        pool: POOL_APP01
+        ip_protocol: tcp
+        profiles:
+          - http
+          - CLIENTSSL_APP01
+        provider: "{{ f5_provider }}"
+        state: present
+>>>>>>> ff3166e (	new file:   Ansible_F5_Automation_Demo_Kailas_Pathade.docx)

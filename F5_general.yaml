@@ -1,0 +1,31 @@
+---
+- name: Automate F5 BIG-IP Configuration
+  hosts: all
+  gather_facts: false
+  
+  # 1. Automatically load your user ID and password file
+  vars_files:
+    - f5_creds.yaml
+
+  # 2. Define your f5_provider object mapping the required variables
+  vars:
+    f5_provider:
+      server: "{{ ansible_host }}"
+      user: "{{ f5_username }}"
+      password: "{{ f5_password }}"
+      server_port: 443
+      validate_certs: false
+
+  tasks:
+    # 💡 A simple non-destructive test task to verify connection success
+    - name: Gather system facts from F5 BIG-IP
+      f5networks.f5_modules.bigip_device_info:
+        provider: "{{ f5_provider }}"
+        gather_subset:
+          - system-info
+      register: f5_details
+      delegate_to: localhost
+
+    - name: Display F5 System Info Output
+      ansible.builtin.debug:
+        var: f5_details.system_info

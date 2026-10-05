@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <title>F5 VIP & Pool Status</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background: #f4f6f8;
+        }
+
+        h1 {
+            color: #222;
+        }
+
+        .dashboard {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th {
+            background: #333;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tr:hover {
+            background: #f1f1f1;
+        }
+
+        .available {
+            color: green;
+            font-weight: bold;
+        }
+
+        .offline {
+            color: red;
+            font-weight: bold;
+        }
+
+        .unknown {
+            color: orange;
+            font-weight: bold;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="dashboard">
+
+    <h1>F5 BIG-IP VIP & Pool Status</h1>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>VIP</th>
+                <th>Destination</th>
+                <th>VIP Status</th>
+                <th>Pool</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+        {% for item in data %}
+
+            <tr>
+
+                <td>{{ item.vip }}</td>
+
+                <td>{{ item.destination }}</td>
+
+                <td class="
+                    {% if item.vip_status == 'available' %}
+                        available
+                    {% elif item.vip_status == 'offline' %}
+                        offline
+                    {% else %}
+                        unknown
+                    {% endif %}
+                ">
+                    {{ item.vip_status }}
+                </td>
+
+                <td>{{ item.pool }}</td>
+
+            </tr>
+
+        {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+</body>
+</html>

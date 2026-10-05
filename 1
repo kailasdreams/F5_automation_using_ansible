@@ -1,0 +1,27 @@
+---
+- name: Test F5 Virtual Server Collection
+  hosts: f5
+  connection: local
+  gather_facts: false
+
+  collections:
+    - f5networks.f5_modules
+
+  tasks:
+
+    - name: Get F5 Virtual Servers
+      bigip_device_info:
+        gather_subset:
+          - virtual-servers
+        server: "{{ ansible_host }}"
+        user: "{{ f5_username }}"
+        password: "{{ f5_password }}"
+        server_port: 443
+        validate_certs: false
+        timeout: 30
+      register: virtual_server_info
+
+    - name: Show VIP information
+      debug:
+        var: virtual_server_info.virtual_servers
+
