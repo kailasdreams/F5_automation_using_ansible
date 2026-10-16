@@ -1,12 +1,8 @@
 ---
-<<<<<<< HEAD
+
 collections:
   - name: f5networks.f5_modules
-=======
-<<<<<<< HEAD
-collections:
-  - name: f5networks.f5_modules
-=======
+
 - name: Create F5 LTM VIP and Pool with Client SSL
   hosts: all
   connection: local
