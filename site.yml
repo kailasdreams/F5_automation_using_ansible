@@ -85,5 +85,3 @@ collections:
         provider: "{{ f5_provider }}"
         state: present
 
->>>>>>> b71ba28 (Remove venv from repository and add to gitignore)
->>>>>>> ff3166e (	new file:   Ansible_F5_Automation_Demo_Kailas_Pathade.docx)
