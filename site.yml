@@ -71,7 +71,7 @@ collections:
     - name: Create virtual server
       f5networks.f5_modules.bigip_virtual_server:
         name: VIP_APP01_HTTPS
-        destination: 192.168.1.200
+        destination: 192.168.1.253
         port: "443"
         pool: POOL_APP01
         ip_protocol: tcp
